@@ -1,0 +1,44 @@
+schema_version: 1.1.1
+
+general:
+  msdir: data
+  prefix: test
+
+getdata:
+  dataid: ['1059-9-around-HI-1']
+  extension: ms
+
+obsconf: 
+  refant: 'auto'
+
+transform__2:
+  enable: true
+  split_field:
+    enable: true
+    otfcal:
+      enable: true
+      label_cal: '1gc1'
+
+prep__2:
+  enable: true
+  label_in: corr
+  field: target
+  specweights:
+    enable: true
+    mode: uniform
+
+flag__2: 
+  enable: true
+  field: target
+  label_in: corr
+  flag_spw:
+    enable: true
+  flag_rfi: 
+    enable: true
+    col: DATA
+    flagger: aoflagger
+    aoflagger:
+      strategy: firstpass_QUV.rfis
+  inspect: 
+    enable: false
+    field: target

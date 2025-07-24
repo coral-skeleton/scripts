@@ -1,0 +1,21 @@
+taskname           = "split"
+vis                =  "/idia/projects/meerchoirs/raw/SCI-20220822-MM-01/1674076581/1674076581_sdp_l0.ms"
+outputvis          =  "/scratch3/projects/meerchoirs/jcviljoen/data/1059-9-around-HI-1380-85.ms"
+keepmms            =  True
+field              =  ""
+spw                =  "0:1380~1385MHz"
+scan               =  ""
+antenna            =  ""
+correlation        =  ""
+timerange          =  ""
+intent             =  ""
+array              =  ""
+uvrange            =  ""
+observation        =  ""
+feed               =  ""
+datacolumn         =  "data"
+keepflags          =  True
+width              =  1
+timebin            =  "0s"
+combine            =  ""
+#split(vis="/idia/projects/meerchoirs/raw/SCI-20220822-MM-01/1674076581/1674076581_sdp_l0.ms",outputvis="/scratch3/projects/meerchoirs/jcviljoen/data/1059-9-around-HI-1380-85.ms",keepmms=True,field="",spw="0:1380~1385MHz",scan="",antenna="",correlation="",timerange="",intent="",array="",uvrange="",observation="",feed="",datacolumn="data",keepflags=True,width=1,timebin="0s",combine="")

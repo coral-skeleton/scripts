@@ -1,0 +1,154 @@
+schema_version: 1.1.1
+
+general:
+  msdir: data
+  prefix: meerkatdefaults
+
+getdata:
+  dataid: ['1059-9-around-HI-1380-85']
+  extension: ms
+
+obsconf: 
+  refant: 'auto'
+
+transform__galx: ### cut only the frequency window you want for the HI data
+  enable: true
+  label_in: corr
+  label_out: galx
+  field: target
+  split_field:
+    enable: true
+    spw: '0:1380~1385MHz' ## change this to desired frequency
+    chan_avg: 1 
+    col: data
+
+selfcal:
+  enable: true
+  label_in: cont
+  rewind_flags:
+    enable: true
+  ncpu: 30
+  img_npix: 4098 ## this should correspond to ~3deg
+  img_cell: 2
+  img_taper: '0' 
+  img_nchans: 5 #5 gives chunks of 20.9 MHz (can go down to ~10 MHz if not too many channels) 
+  img_specfit_nrcoeff: 2
+  img_robust: -0.5
+  img_nrdeconvsubimg: 8
+  start_iter: 1
+  cal_niter: 3
+  cal_gain_cliplow: 0
+  cal_gain_cliphigh: 0
+  cal_cubical:
+    max_prior_error: 0
+    max_post_error: 0
+    flag_madmax: false
+    shared_mem: 230Gb
+    dist_max_chunks: 2
+  image:
+    enable: true
+    col: [DATA,CORRECTED_DATA,CORRECTED_DATA,CORRECTED_DATA]
+    clean_cutoff: [1.0,0.75,0.75,0.75]
+    cleanmask_method: [sofia,sofia,sofia,sofia]
+    cleanmask_thr: [15.0,10.0,5.0,4.0]
+    cleanmask_localrms: [True,True,True,True]
+    cleanmask_localrms_window: [101,101,101,101]  ## make sure this window is larger than your largest source
+  img_sofia_settings:
+    kernels: [0, 6, 12] ## (want 0, 1, 2x beam so check pixel size to beam ~3/4)
+  calibrate:
+    enable: true
+    gain_matrix_type: [GainDiagPhase,GainDiagPhase,GainDiag]
+    gsols_timeslots: [20, 20, 60]
+    model: ['1','2','3']
+  transfer_apply_gains:
+    enable: true
+    transfer_to_label: galx
+    interpolate:
+      enable: true
+  transfer_model:
+    enable: true
+    mem_frac: 0.3
+    num_workers: 30 
+    transfer_to_label: galx
+
+transform__chan: ### cut only the frequency window you want for the HI data
+  enable: false
+  label_in: galx_mst
+  label_out: galx_chan
+  field: target
+  split_field:
+    enable: true
+    spw: '0:1380~1385MHz' ## change this to desired frequency
+    chan_avg: 1 
+    col: data
+    
+line__galx: ### this is where the mst files for the HI cube are created.
+  enable: true
+  cabs:
+    - name: wsclean
+      tag: 1.7.7
+  label_in: galx
+  line_name: HI
+  restfreq: '1.420405752GHz'
+  rewind_flags:
+    enable: false
+  predict_noise:
+    enable: false
+  subtractmodelcol:
+    enable: false #####!!!!!!###### must only be true on first run! 
+  mstransform:
+    enable: true
+    doppler:
+      enable: true
+      telescope: meerkat      
+    uvlin: 
+      enable: true  ### I don't recommend runnning this unless it is a very narrow frequency range, and you know exactly where the HI is
+      exclude_known_sources: true
+      known_sources_cat: hi_known.txt
+      known_sources_dv: 5
+      fitorder: 2
+  flag_mst_errors:
+    enable: true
+  sunblocker: 
+      enable: false
+      imsize: 2048 #2048
+      cell: 2.0 #2.0
+      vampirisms: true
+      flagonlyday: true
+  make_cube:
+    enable: true  ## will create the cube in another script
+    use_mstransform: true
+    npix: [2048] #2048
+    cell: 2.0 #2.0
+    robust: 1.0
+    nchans: 0
+    firstchan: 0
+    binchans: 1
+    wscl_auto_mask: 5 #5
+    wscl_auto_thr: 0.75 #0.75
+    wscl_mgain: 0.95
+    wscl_onlypsf: false
+    wscl_multiscale: true
+    wscl_multiscale_scales: '0, 4, 8, 16, 24'
+    wscl_nrdeconvsubimg: 1
+    wscl_sofia_niter: 2
+    wscl_sofia_converge: 0
+    wscl_removeintermediate: false
+  remove_stokes_axis:
+    enable: true
+  pb_cube:
+    enable: true
+    #pb_type: mauch #gauss
+  sofia:
+    enable: true
+    merge: true
+    mergeX: 1
+    mergeY: 1
+    mergeZ: 1
+    minSizeZ: 1
+    cubelets: false
+    mom0: true
+    mom1: true
+  freq_to_vel:
+    enable: true
+  report: true

@@ -1,0 +1,26 @@
+schema_version: 1.1.1
+
+general:
+  msdir: data
+  prefix: test
+
+getdata:
+  dataid: ['1059-9-around-HI-1']
+  extension: ms
+
+obsconf: 
+  refant: 'auto'
+
+ddcal:
+  enable: false
+  label_in: 'corr'
+  use_pb: true
+  calibrate_dd:
+    enable: True
+    de_sources_mode: manual
+  copy_data:
+    enable: true
+  image_wsclean:
+    enable: true
+  transfer_model_dd:
+    enable: true

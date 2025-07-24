@@ -1,0 +1,188 @@
+schema_version: 1.1.1
+
+general:
+  msdir: data
+  prefix: meerkatdefaults
+  
+
+getdata:
+  dataid: ['1059-9-around-HI-1380-85']
+  extension: ms
+
+obsconf: 
+  refant: 'm008'
+
+## Calibrator ~ 100MHz
+transform__calib:
+  enable: true
+  field: calibrators
+  label_out: cal
+  split_field:
+    enable: true
+    col: data
+
+
+prep__calib:
+  enable: true
+  label_in: cal
+  field: calibrators
+  specweights:
+    enable: true
+    mode: uniform
+
+flag__calib:
+  enable: true
+  field: calibrators
+  label_in: cal
+  flag_autocorr:    # should not really be necessary, but just in case
+    enable: true
+ # flag_spw:
+    #enable: true
+    #chans: '*:1389.9245~1390.4470MHz , *:1398.3616~1398.5445MHz'
+    #ensure_valid: false
+  flag_spw:
+    enable: true #disable this if the cal does not have these bands
+    chans: '*:1379.6~1382.3MHz' 
+    ensure_valid: true
+  flag_mask:
+    enable: true
+    mask: labelled_rfimask.pickle.npy
+    uvrange: '0~1000'
+  flag_shadow:
+    enable: true
+    full_mk64: true
+  flag_autopowerspec:
+    enable: true
+  flag_rfi:
+    enable: true
+    flagger: aoflagger
+    aoflagger:
+      strategy: firstpass_Q.rfis
+
+inspect__calib:
+  enable: true
+  field: 'calibrators'
+  label_in: cal
+  label_plot: before_crosscal
+  dirname: before_crosscal
+  standard_plotter: none
+  shadems:
+    enable: true
+    ignore_errors: true
+    default_column: DATA
+    plots_by_field:
+      - "-x TIME -y amp:I --dir time-iamp-byfield-{msbase}"
+      - "-x FREQ -y amp:I --dir freq-iamp-byfield-{msbase}"
+      - "-x FREQ -y phase:I --dir freq-iphase-byfield-{msbase}"
+    plots:
+      # per-scan plots
+      - iter_scan:
+        cmap: pride
+        corr: XX,YY
+        plots:
+          - "-x FREQ -y amp:I --field {bpcal} --dir pre-bpcal-iamp-byscan-{msbase}"
+          - "-x FREQ -y amp:I --field {gcal} --dir pre-gcal-iamp-byscan-{msbase}"
+
+crosscal:
+  enable: true
+  uvrange: '>150'
+  label_in: 'cal'
+  label_cal: '1gc1'
+  report: true
+  set_model:
+    enable: true
+    meerkat_skymodel: false
+  primary:
+    order: KGBKGB
+    combine: [scan, "", scan, scan, "", scan]
+    solint: [inf, inf, inf, inf, inf, inf]
+    calmode: [a, ap, ap, a, ap, ap] 
+    plotgains: true
+    b_smoothwindow: 9
+  secondary:
+    order: GAF
+    apply: KB
+    combine: ["", null, ""] 
+    solint: [inf, null, inf]
+    calmode: [ap, null, ap] 
+    plotgains: true
+  apply_cal: 
+    applyto: 
+      - gcal
+      - bpcal
+
+inspect__crosscal:
+  enable: true
+  label_in: 'cal'
+  label_plot: '1gc1'
+  field: 'calibrators'
+  dirname: 'after_crosscal'
+  standard_plotter: none
+  shadems:
+    enable: true
+    default_column: CORRECTED_DATA  
+    plots_by_field:
+      - "-x TIME  -y amp:I --dir time-iamp-byfield-{msbase}"
+      - "-x TIME  -y phase:I --dir time-iphase-byfield-{msbase}"
+      - "-x real  -y imag --dir phaseball-byfield-{msbase}"
+      - "-x FREQ  -y amp:I --dir freq-iamp-byfield-{msbase}"
+      - "-x FREQ  -y phase:I --dir freq-iphase-byfield-{msbase}"
+    ignore_errors: true
+    plots:
+      # per-scan plots
+      - iter_scan:
+        cmap: pride
+        corr: XX,YY
+        plots:
+          - "-x FREQ -y amp:I --field {bpcal} --dir bpcal-iamp-byscan-{msbase}"
+          - "-x real -y imag --field {bpcal} --dir bpcal-phase-byscan-{msbase}"
+          - "-x FREQ -y amp:I --field {gcal} --dir gcal-iamp-byscan-{msbase}"
+          - "-x real -y imag --field {gcal} --dir gcal-phase-byscan-{msbase}"
+
+## Full target band that has been cross-cal'd
+transform__corr: 
+  enable: true
+  label_out: corr
+  field: 'target'
+  split_field:
+    enable: true
+    otfcal:
+      enable: true
+      label_cal: '1gc1'
+
+flag__corr: 
+  enable: true
+  field: 'target'
+  label_in: corr
+  flag_autocorr:
+    enable: true
+  #flag_antennas:
+    #enable: false
+    #antennas: 'm059'
+  flag_scan:
+    enable: false
+  flag_mask:
+    enable: true
+    mask: labelled_rfimask.pickle.npy
+    uvrange: '0~1000'
+  flag_shadow:
+    enable: true
+    full_mk64: true
+  flag_rfi: 
+    enable: true
+    flagger: aoflagger
+    col: DATA
+    aoflagger:
+      strategy: flagtarget_Q.rfis
+
+## Frequency avgd dataset used for crosscal, should use ~1K resolution
+transform__cont: 
+  enable: true
+  label_in: corr
+  label_out: cont
+  field: 'target'
+  split_field:
+    enable: true
+    #chan_avg: 32 # choose number corresponding to 1K
+    col: data   
+    

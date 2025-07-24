@@ -1,0 +1,90 @@
+schema_version: 1.1.1
+
+general:
+  msdir: data
+  prefix: mask
+  input: input_mask
+  output: output_mask
+
+getdata:
+  #dataid: ['1059-9-around-HI-1382']
+  dataid: ['1059-9-around-HI-1380-85']
+  extension: ms
+
+obsconf: 
+  refant: 'auto'
+  
+line__galx: ### this is where the mst files for the HI cube are created.
+  enable: true
+  cabs:
+    - name: wsclean
+      tag: 1.7.7
+  label_in: galx
+  line_name: HI
+  restfreq: '1.420405752GHz'
+  rewind_flags:
+    enable: false
+  predict_noise:
+    enable: false
+  subtractmodelcol:
+    enable: false #####!!!!!!###### must only be true on first run! 
+  mstransform:
+    enable: true
+    doppler:
+      enable: true
+      telescope: meerkat      
+    uvlin: 
+      enable: false  ### I don't recommend runnning this unless it is a very narrow frequency range, and you know exactly where the HI is
+      exclude_known_sources: true
+      known_sources_cat: hi_known.txt
+      known_sources_dv: 5
+      fitorder: 2
+  flag_mst_errors:
+    enable: false
+    strategy: 'postmst.rfis'
+  sunblocker: 
+      enable: false
+      imsize: 2048
+      cell: 2.0
+      vampirisms: true
+      flagonlyday: true
+  make_cube:
+    enable: true  ## will create the cube in another script
+    use_mstransform: true
+    npix: [2048] #2048 8192
+    cell: 2.0 #2.0 0.5
+    robust: 0.7
+    taper: 0
+    niter: 125
+    nchans: 0
+    firstchan: 0
+    binchans: 1
+    wscl_auto_mask: 5 #5
+    wscl_auto_thr: 0.75 #0.75
+    wscl_mgain: 0.95
+    wscl_onlypsf: false
+    wscl_multiscale: true
+    wscl_nrdeconvsubimg: 1 #1
+    wscl_sofia_niter: 2
+    wscl_sofia_converge: 0
+    wscl_removeintermediate: false
+    #wscl_beam: [7.26,7.26,0]
+  remove_stokes_axis:
+    enable: true
+  pb_cube:
+    enable: true
+    #pb_type: mauch #gauss
+    apply_pb: true
+  sofia:
+    enable: true
+    merge: true
+    mergeX: 1
+    mergeY: 1
+    mergeZ: 1
+    minSizeZ: 1
+    cubelets: false
+    mom0: true
+    mom1: true
+  freq_to_vel:
+    enable: true
+  report: true

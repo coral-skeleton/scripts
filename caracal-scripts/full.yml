@@ -1,0 +1,338 @@
+ schema_version: 1.1.1
+
+general:
+  msdir: data
+  prefix: final
+  input: input_final_setbeam_pbcorr
+  output: output_final_setbeam_pbcorr
+getdata:
+  dataid: ['1059-9-around-HI-1380-85']
+  extension: ms
+
+obsconf: 
+  refant: 'm000'
+
+## Calibrator ~ 100MHz
+transform__calib:
+  enable: true
+  field: calibrators
+  label_out: cal
+  split_field:
+    enable: true
+    col: data
+
+
+prep__calib:
+  enable: true
+  label_in: cal
+  field: calibrators
+  specweights:
+    enable: true
+    mode: uniform
+
+flag__calib:
+  enable: true
+  field: calibrators
+  label_in: cal
+  flag_autocorr:    # should not really be necessary, but just in case
+    enable: true
+ # flag_spw:
+    #enable: true
+    #chans: '*:1389.9245~1390.4470MHz , *:1398.3616~1398.5445MHz'
+    #ensure_valid: false
+  #flag_spw:
+    #enable: true #disable this if the cal does not have these bands
+    #chans: '*:1379.6~1382.3MHz' 
+    #ensure_valid: true
+  flag_antennas:
+    enable: true
+    antennas: 'm041'
+  flag_mask:
+    enable: true
+    mask: labelled_rfimask.pickle.npy
+    uvrange: '0~1000' #'0~1000'
+  flag_shadow:
+    enable: true
+    full_mk64: true
+  flag_autopowerspec:
+    enable: true
+  flag_rfi:
+    enable: true
+    flagger: aoflagger
+    aoflagger:
+      strategy: firstpass_Q.rfis
+
+inspect__calib:
+  enable: true
+  field: 'calibrators'
+  label_in: cal
+  label_plot: before_crosscal
+  dirname: before_crosscal
+  standard_plotter: none
+  shadems:
+    enable: true
+    ignore_errors: true
+    default_column: DATA
+    plots_by_field:
+      - "-x TIME -y amp:I --dir time-iamp-byfield-{msbase}"
+      - "-x FREQ -y amp:I --dir freq-iamp-byfield-{msbase}"
+      - "-x FREQ -y phase:I --dir freq-iphase-byfield-{msbase}"
+    plots:
+      # per-scan plots
+      - iter_scan:
+        cmap: pride
+        corr: XX,YY
+        plots:
+          - "-x FREQ -y amp:I --field {bpcal} --dir pre-bpcal-iamp-byscan-{msbase}"
+          - "-x FREQ -y amp:I --field {gcal} --dir pre-gcal-iamp-byscan-{msbase}"
+
+crosscal:
+  enable: true
+  uvrange: '>150'
+  label_in: 'cal'
+  label_cal: '1gc1'
+  report: true
+  set_model:
+    enable: true
+    meerkat_skymodel: false
+  primary:
+    order: KGBKGB
+    combine: [scan, "", scan, scan, "", scan]
+    solint: [inf, inf, inf, inf, inf, inf]
+    calmode: [a, ap, ap, a, ap, ap] 
+    plotgains: true
+    b_smoothwindow: 9
+  secondary:
+    order: GAF
+    apply: KB
+    combine: ["", null, ""] 
+    solint: [inf, null, inf]
+    calmode: [ap, null, ap] 
+    plotgains: true
+  apply_cal: 
+    applyto: 
+      - gcal
+      - bpcal
+
+inspect__crosscal:
+  enable: true
+  label_in: 'cal'
+  label_plot: '1gc1'
+  field: 'calibrators'
+  dirname: 'after_crosscal'
+  standard_plotter: none
+  shadems:
+    enable: true
+    default_column: CORRECTED_DATA  
+    plots_by_field:
+      - "-x TIME  -y amp:I --dir time-iamp-byfield-{msbase}"
+      - "-x TIME  -y phase:I --dir time-iphase-byfield-{msbase}"
+      - "-x real  -y imag --dir phaseball-byfield-{msbase}"
+      - "-x FREQ  -y amp:I --dir freq-iamp-byfield-{msbase}"
+      - "-x FREQ  -y phase:I --dir freq-iphase-byfield-{msbase}"
+    ignore_errors: true
+    plots:
+      # per-scan plots
+      - iter_scan:
+        cmap: pride
+        corr: XX,YY
+        plots:
+          - "-x FREQ -y amp:I --field {bpcal} --dir bpcal-iamp-byscan-{msbase}"
+          - "-x real -y imag --field {bpcal} --dir bpcal-phase-byscan-{msbase}"
+          - "-x FREQ -y amp:I --field {gcal} --dir gcal-iamp-byscan-{msbase}"
+          - "-x real -y imag --field {gcal} --dir gcal-phase-byscan-{msbase}"
+
+## Full target band that has been cross-cal'd
+transform__corr: 
+  enable: true
+  label_out: corr
+  field: 'target'
+  split_field:
+    enable: true
+    otfcal:
+      enable: true
+      label_cal: '1gc1'
+
+flag__corr: 
+  enable: true
+  field: 'target'
+  label_in: corr
+  flag_autocorr:
+    enable: true
+  #flag_antennas:
+    #enable: false
+    #antennas: 'm059'
+  flag_antennas:
+    enable: true
+    antennas: 'm041'
+  flag_scan:
+    enable: false
+  flag_mask:
+    enable: true
+    mask: labelled_rfimask.pickle.npy
+    uvrange: '0~1000' #'0~1000'
+  flag_shadow:
+    enable: true
+    full_mk64: true
+  flag_rfi: 
+    enable: true
+    flagger: aoflagger
+    col: DATA
+    aoflagger:
+      strategy: flagtarget_Q.rfis
+
+## Frequency avgd dataset used for crosscal, should use ~1K resolution
+transform__cont: 
+  enable: true
+  label_in: corr
+  label_out: cont
+  field: 'target'
+  split_field:
+    enable: true
+    #chan_avg: 32 # choose number corresponding to 1K
+    col: data
+   
+transform__galx: ### cut only the frequency window you want for the HI data
+  enable: true
+  label_in: corr
+  label_out: galx
+  field: target
+  split_field:
+    enable: true
+    spw: '0:1380~1385MHz' ## change this to desired frequency
+    chan_avg: 1 
+    col: data
+    
+selfcal:
+  enable: true
+  label_in: cont
+  rewind_flags:
+    enable: true
+  ncpu: 30
+  img_npix: 4096 ## this should correspond to ~3deg
+  img_cell: 2
+  img_taper: '0' 
+  img_nchans: 5 #5 gives chunks of 20.9 MHz (can go down to ~10 MHz if not too many channels) 
+  img_specfit_nrcoeff: 2
+  img_robust: -2.0
+  img_nrdeconvsubimg: 8
+  start_iter: 1
+  cal_niter: 3
+  cal_gain_cliplow: 0
+  cal_gain_cliphigh: 0
+  cal_cubical:
+    max_prior_error: 0
+    max_post_error: 0
+    flag_madmax: false
+    shared_mem: 230Gb
+    dist_max_chunks: 2
+  image:
+    enable: true
+    col: [DATA,CORRECTED_DATA,CORRECTED_DATA,CORRECTED_DATA]
+    clean_cutoff: [1.0,0.75,0.75,0.75] #[1.0,0.75,0.75,0.75]
+    cleanmask_method: [sofia,sofia,sofia,sofia]
+    cleanmask_thr: [15.0,10.0,5.0,4.0]
+    cleanmask_localrms: [True,True,True,True]
+    cleanmask_localrms_window: [101,101,101,101]  ## make sure this window is larger than your largest source
+  img_sofia_settings:
+    kernels: [0, 6, 12] ## (want 0, 1, 2x beam so check pixel size to beam ~3/4)
+  calibrate:
+    enable: true
+    gain_matrix_type: [GainDiagPhase,GainDiagPhase,GainDiag]
+    gsols_timeslots: [20, 20, 60]
+    model: ['1','2','3']
+  transfer_apply_gains:
+    enable: true
+    transfer_to_label: galx
+    interpolate:
+      enable: true
+  transfer_model:
+    enable: true
+    mem_frac: 0.3
+    num_workers: 30 
+    transfer_to_label: galx
+
+transform__chan: ### cut only the frequency window you want for the HI data
+  enable: false
+  label_in: galx_mst
+  label_out: galx_chan
+  field: target
+  split_field:
+    enable: true
+    spw: '0:1380~1385MHz' ## change this to desired frequency
+    chan_avg: 1 
+    col: data
+    
+line__galx: ### this is where the mst files for the HI cube are created.
+  enable: true
+  cabs:
+    - name: wsclean
+      tag: 1.7.7
+  label_in: galx
+  line_name: HI
+  restfreq: '1.420405752GHz'
+  rewind_flags:
+    enable: false
+  predict_noise:
+    enable: false
+  subtractmodelcol:
+    enable: true #####!!!!!!###### must only be true on first run! 
+  mstransform:
+    enable: true
+    doppler:
+      enable: true
+      telescope: meerkat      
+    uvlin: 
+      enable: false  ### I don't recommend runnning this unless it is a very narrow frequency range, and you know exactly where the HI is
+      exclude_known_sources: true
+      known_sources_cat: hi_known.txt
+      known_sources_dv: 5
+      fitorder: 2
+  flag_mst_errors:
+    enable: true
+  sunblocker: 
+      enable: false
+      imsize: 2048
+      cell: 2.0
+      vampirisms: true
+      flagonlyday: true
+  make_cube:
+    enable: true  ## will create the cube in another script
+    use_mstransform: true
+    npix: [2048] #2048 8192
+    cell: 2.0 #2.0 0.5
+    robust: 0.7
+    niter: 60
+    nchans: 0
+    firstchan: 0
+    binchans: 1
+    wscl_auto_mask: 5 #5
+    wscl_auto_thr: 0.75 #0.75
+    wscl_mgain: 0.95
+    wscl_onlypsf: false
+    wscl_multiscale: true
+    wscl_multiscale_scales: '0, 4, 8, 16, 24'
+    wscl_nrdeconvsubimg: 1 #1
+    wscl_sofia_niter: 2
+    wscl_sofia_converge: 0
+    wscl_removeintermediate: false
+    wscl_beam: [7.26,7.26,0]
+  remove_stokes_axis:
+    enable: true
+  pb_cube:
+    enable: true
+    #pb_type: mauch #gauss
+    apply_pb: true
+  sofia:
+    enable: true
+    merge: true
+    mergeX: 1
+    mergeY: 1
+    mergeZ: 1
+    minSizeZ: 1
+    cubelets: false
+    mom0: true
+    mom1: true
+  freq_to_vel:
+    enable: true
+  report: true

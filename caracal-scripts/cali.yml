@@ -1,0 +1,112 @@
+schema_version: 1.1.1
+
+general:
+    msdir: data
+    prefix: claypipeline
+
+getdata:
+    dataid: ['1059-9-around-HI-1380-85']
+    extention: ms
+
+obsconf:
+    referant: 'm008'
+    
+transform__cal:
+    enable: true
+    field: calibrators
+    label_out: cal
+    split_fied:
+        enable: true
+        col: data
+
+prep__cal:
+    enable: true
+    label_in: cal
+    field: calibrators
+    specweights:
+        enable: true
+        mode: uniform
+
+flag__cal:
+    enable: true
+    field: calibrators
+    label_in: cal
+    flag_autopowerspec:
+        enable: true
+    flag_autocorr:
+        enable: true
+    flag_shadow:
+        enable: true
+        full_mk64: true
+    flag_spw:
+        enable: true
+        chans: "*:1380~1382.3MHz"
+        ensure_valid: true
+    flag_time:
+        enable: true
+        timerange: '2023/01/18:21:43:00~2023/01/18:21:45:00, 2023/01/18:21:50:00~2023/01/18:21:53:00'
+    flag_mask:
+        enable: true
+        mask: labelled_rfimask.pickle.npy
+    flag_rfi:
+        enable: true
+        flagger: aoflagger
+        aoflagger:
+            strategy: firstpass_Q.rfis
+            ensure_valid: true
+
+crosscal:
+    enable: true
+    label_in: cal
+    label_cal: 1gc1
+    uvrange: >150
+    set_model: 
+        enable: true
+    primary: 
+        order: KGBKGB
+        calmode: [a, ap, ap, a, ap, ap]
+        solint: [inf, inf, inf, inf, inf, inf]
+        combine: [scan, '', scan, scan, '', scan]
+        b_smoothwindow: 5
+        plotgains: true
+    secondary: 
+        apply: KB
+        order: GAF
+        calmode: [ap, null, ap]
+        solint: [inf, null, inf]
+        combine: ['', null, '']
+        plotgains: true
+    apply_cal:
+        applyto: gcal, bpcal
+
+inspect:
+    
+
+
+transform__target:
+
+
+prep__target:
+
+
+flag__target:
+
+
+transform__avgtarget:
+
+
+flag__avgtarget:
+
+
+selfcal:
+
+
+line:
+
+
+mosaic__cont:
+
+
+mosaic__target:
+
+
