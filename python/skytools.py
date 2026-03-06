@@ -237,11 +237,10 @@ def contsub(data): #continuum subtraction
     
     return cent, continuum
 
-def pca(data): #singular value decomp of data
+def pca(data,l,lmin,lmax): #singular value decomp of data
     
-    x,y = data.shape
-    n = np.round(x/2)
-    masked = maskspectrum(data,l)
+    
+    masked = maskspectrum(data,l,lmin,lmax)
     
     U, S, Vt = np.linalg.svd(masked, full_matrices=False)
     
@@ -249,11 +248,14 @@ def pca(data): #singular value decomp of data
 
     
     
-def idpcacomps(data,l): #plot first components for user identification of which to use
+def idpcacomps(data,l,lmin,lmax):#plot first components for user identification of which to use
     
-    U,S,Vt = pca(data)
+    x,y = data.shape
+    n = np.round(x/2)
+    U,S,Vt = pca(data,l,lmin,lmax)
+    cent,continuum = contsub(data)
     fig = plt.figure(figsize = (30,8))
-    plt.plot(real,masked[n,:]-0.2,label='data')    
+    plt.plot(real,cent[n,:]-0.2,label='data')    
 
 
     for k in range(12):
@@ -271,9 +273,9 @@ def idpcacomps(data,l): #plot first components for user identification of which 
     plt.ylabel("Fraction of Variance")
     plt.title("Variance of components")
 
-def pcaskysub(data, nsky = [1,2,3,4,5]): #actual pca skysub routine
+def pcaskysub(data, nsky = [1,2,3,4,5],l,lmin,lmax): #actual pca skysub routine
     
-    U,S,Vt = pca(data)
+    U,S,Vt = pca(data,l,lmin,lmax)
     sky_model = np.zeros_like(data)
 
     for k in nsky:
