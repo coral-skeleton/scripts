@@ -8,3 +8,5 @@ Most of what's here is just old backups of my jupyter notebooks
 Python tools for spectral analysis is spectools.py in the python folder
 
 Tools for RSS skysubtraction is skytools.py in the python folder
+
+All scripts and tools assume the user has the latesest versions of numpy, matplotlib, astropy, and scipy installed
