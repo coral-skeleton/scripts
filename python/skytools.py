@@ -119,7 +119,8 @@ def stdskysubifu(data, skyfib = [4,22,30,31,40,52,64,77,91,104,117,132,155,167,1
 
 def getskyrows(data): #autodetection of longslit sky rows, doesnt care about object trace
     
-    nedge=30, sigma=3
+    nedge=30 
+    sigma=3
     
     n_spatial, _ = data.shape
 
