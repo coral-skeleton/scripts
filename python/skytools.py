@@ -274,7 +274,7 @@ def idpcacomps(data,l,lmin,lmax):#plot first components for user identification 
     plt.ylabel("Fraction of Variance")
     plt.title("Variance of components")
 
-def pcaskysub(data, nsky = [1,2,3,4,5],l,lmin,lmax): #actual pca skysub routine
+def pcaskysub(data,l,lmin,lmax, nsky = [1,2,3,4,5]): #actual pca skysub routine
     
     U,S,Vt = pca(data,l,lmin,lmax)
     sky_model = np.zeros_like(data)
